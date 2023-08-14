@@ -1,2 +1,0 @@
-# FlaskBasics
-ALL Flask refreshments
