@@ -1,0 +1,22 @@
+
+<h1>Hello world</h1>
+
+<p>my first page</p>
+
+<h3>Favs</h3>
+
+<h3>Itterate for each element</h3>
+{% for topping in favorite %}
+
+    {% if topping == 50 %}
+        {{ topping + 100}}<br/>
+    {% else %}
+        {{ topping }}<br/>
+        
+    {% endif %}
+{% endfor %}
+
+
+<h3>Get certan item</h3>
+    <br/>
+{{ favorite.0 }}
