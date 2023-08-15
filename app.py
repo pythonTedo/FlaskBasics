@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash
+from flask import Flask, render_template, flash, request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
@@ -61,9 +61,64 @@ def name():
 
     return render_template("name.html", name=name, form=form)
 
+# Add new user
 @app.route("/user/add", methods=["GET", "POST"])
 def add_user():
-    return render_template("add_user.html")
+    name = None
+    form = UserForm()
+    #Validate Form submitions
+    if form.validate_on_submit():
+        user = Users.query.filter_by(email=form.email.data).first()
+        if user is None:
+            user = Users(name = form.name.data, email = form.email.data)
+            db.session.add(user)
+            db.session.commit()
+        name = form.name.data
+        #clear it for the next time
+        form.name.data = ""
+        form.email.data = ""
+        flash("User added successfully")
+    our_users = Users.query.order_by(Users.date_added)
+    return render_template("add_user.html", form=form, name=name, our_users = our_users)
+
+
+# Update user from database
+@app.route("/update/<int:id>", methods = ["GET", "POST"])
+def update(id):
+    form = UserForm()
+    name_to_update = Users.query.get_or_404(id)
+
+    if request.method == "POST":
+        name_to_update.name = request.form['name']
+        name_to_update.email = request.form['email']
+        try:
+            db.session.commit()
+            flash("User updated successfully!")
+            return render_template("update_user.html", form=form, name_to_update = name_to_update)
+        except:
+            flash("Error! There was a problem!")
+            return render_template("update_user.html", form=form, name_to_update = name_to_update)
+    else:
+        return render_template("update_user.html", form=form, name_to_update = name_to_update, id=id)
+
+# Update user from database
+@app.route("/delete/<int:id>", methods = ["GET", "POST"])
+def delete(id):
+    form = UserForm()
+    name = None
+    name_to_delete = Users.query.get_or_404(id)
+
+    try:
+        db.session.delete(name_to_delete)
+        db.session.commit()
+        flash("User deleted successfully!")
+        return render_template("add_user.html", form=form, name_to_delete = name_to_delete, id=id)
+    except:
+        flash("Error! There was a problem!")
+        return render_template("add_user.html", form=form, name_to_update = name_to_delete, id=id)
+
+
+
 #Create Custom Error Pages
 #Ivalid URL
 @app.errorhandler(404)
@@ -75,3 +130,5 @@ def page_not_found(error):
 def page_not_found(error):
     return render_template("500.html"), 500
 
+if __name__ == "__main__":
+    app.run(debug=True)
